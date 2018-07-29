@@ -4,12 +4,15 @@ import android.content.Context
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonParser
+import jonathan.com.techmeeting.persistence.Pokemon
+import jonathan.com.techmeeting.persistence.AppDatabase
+import android.arch.persistence.room.Room
+import jonathan.com.techmeeting.R.raw.pokemon
+
 
 class Util{
 
-    val pokemons : MutableList<Pokemon> = arrayListOf()
-
-    fun readJsonAndPersist(ctx: Context){
+    fun readJsonAndPersist(db : AppDatabase, ctx: Context){
         val pokemonDeserializer : JsonDeserializer<Pokemon> = JsonDeserializer<Pokemon>{
             json, typeOfT, context ->
 
@@ -23,23 +26,24 @@ class Util{
             val types : MutableList<String> = arrayListOf()
             arrayTypes.forEach { types.add(it.asString) }
 
-            Pokemon(id,image, name, description, types)
+            Pokemon(id, image, name, description)
         }
 
-        val inputStream = ctx.resources.openRawResource(R.raw.pokemon)
-        val jsonParser = JsonParser()
+        if(db.pokemonDAO().getAll().size == 0){
+            val inputStream = ctx.resources.openRawResource(R.raw.pokemon)
+            val jsonParser = JsonParser()
+
+            val gsonBuilder = GsonBuilder().serializeNulls()
+            gsonBuilder.registerTypeAdapter(Pokemon::class.java, pokemonDeserializer)
+            val gson = gsonBuilder.create()
+            val jElement = jsonParser.parse(inputStream.reader())
 
 
 
-        val gsonBuilder = GsonBuilder().serializeNulls()
-        gsonBuilder.registerTypeAdapter(Pokemon::class.java, pokemonDeserializer)
-        val gson = gsonBuilder.create()
-        val jElement = jsonParser.parse(inputStream.reader())
-
-        for (i in 0..jElement.asJsonArray.size()-1) {
-            pokemons.add( gson.fromJson(jElement.asJsonArray[i],Pokemon::class.java))
+            for (i in 0..jElement.asJsonArray.size()-1) {
+                db.pokemonDAO().insert(gson.fromJson(jElement.asJsonArray[i], Pokemon::class.java))
+            }
         }
-
     }
 
 

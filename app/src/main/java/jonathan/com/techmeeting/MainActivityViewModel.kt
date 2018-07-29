@@ -2,18 +2,15 @@ package jonathan.com.techmeeting
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
+import jonathan.com.techmeeting.persistence.AppDatabase
+import jonathan.com.techmeeting.persistence.Pokemon
 
-class MainActivityViewModel : ViewModel(){
-    val mutablePokemon : MutableLiveData<Pokemon> = MutableLiveData()
+class MainActivityViewModel() : ViewModel(){
+    val  mutablePokemon : MutableLiveData<Pokemon> = MutableLiveData()
 
-    fun loadPokemon(id: Int): MutableLiveData<Pokemon>{
 
-        mutablePokemon.postValue(loadPokemonById(id))
-        mutablePokemon.value
-        return mutablePokemon
-    }
-
-    private fun loadPokemonById(id : Int ):Pokemon{
-        return Util().pokemons[id]
+    fun loadPokemonById(db: AppDatabase,id : Int ) {
+        Thread.sleep(1000)
+        mutablePokemon.value = db.pokemonDAO().loadAllByIds(id)
     }
 }
